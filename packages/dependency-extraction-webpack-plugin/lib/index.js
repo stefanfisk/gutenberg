@@ -146,14 +146,18 @@ class DependencyExtractionWebpackPlugin {
 					}
 				}
 
-				const runtimeChunk = entrypoint.getRuntimeChunk();
+				const entrypointChunk = entrypoint.getEntrypointChunk
+					? entrypoint.getEntrypointChunk()
+					: entrypoint.chunks.find(
+							( c ) => c.name === entrypointName
+					  );
 
 				const assetData = {
 					// Get a sorted array so we can produce a stable, stringified representation.
 					dependencies: Array.from(
 						entrypointExternalizedWpDeps
 					).sort(),
-					version: runtimeChunk.hash,
+					version: entrypointChunk.hash,
 				};
 
 				const assetString = this.stringify( assetData );
@@ -163,7 +167,7 @@ class DependencyExtractionWebpackPlugin {
 				const buildFilename = compilation.getPath(
 					compiler.options.output.filename,
 					{
-						chunk: runtimeChunk,
+						chunk: entrypointChunk,
 						filename,
 						query,
 						basename: basename( filename ),
@@ -187,7 +191,7 @@ class DependencyExtractionWebpackPlugin {
 				compilation.assets[ assetFilename ] = new RawSource(
 					assetString
 				);
-				runtimeChunk.files.push( assetFilename );
+				entrypointChunk.files.push( assetFilename );
 			}
 
 			if ( combineAssets ) {
